@@ -40,7 +40,7 @@
  * VERSION:  2.0.0
  * PURPOSE:  A lightweight library for error reporting and logging to file and screen .
  * CREATION: 2010.10.4
- * LCHANGE:  2013.04.23
+ * LCHANGE:  2013.04.25
  * LICENSE:  Expat/MIT License, See Copyright Notice at the begin of this file.
  */
 
@@ -53,11 +53,11 @@
  */
 
 
-/*
+/* 
  * UPDATES LOG
- *
+ * 
  * VERSION 0.1.0 <DATE: 2010.10.4>
- *    create the first project.  
+ * 	create the first project.  
  * 	It support put log to screen and files, 
  * 	support log level, support one day one log file.
  * 	support multiple thread, multiple operating system.
@@ -74,33 +74,33 @@
  * 	support comments in the config file.
  * 	add a advanced demo in the ./project
  * 	fix some details.
- *
+ * 
  * VERSION 1.0.1 <DATE: 2013.01.01>
- *    the source code haven't any change.
- *	   fix some Comments in the log4z
- *	   add some comments in the test projects.
- *	   delete some needless code in the 'fast_test' demo projects, it's so simple.
- *
+ * 	the source code haven't any change.
+ * 	fix some Comments in the log4z
+ * 	add some comments in the test projects.
+ * 	delete some needless code in the 'fast_test' demo projects, it's so simple.
+ * 
  * VERSION 1.1.0 <DATE: 2013.01.24>
- *    the method Start will wait for the logger thread started.
- *	   config and add method change. 
- *	   namespace change.
- *	   append some macro.
- *
+ * 	the method Start will wait for the logger thread started.
+ * 	config and add method change. 
+ * 	namespace change.
+ * 	append some macro.
+ * 
  * VERSION 1.1.1 <DATE: 2013.02.23>
- *    add GetStatus**** mothed.
- *	   optimize. 
+ * 	add GetStatus**** mothed.
+ * 	optimize. 
  * VERSION 1.2.0 <DATE: 2013.04.05>
- *    optimize log macro.
- *
+ * 	optimize log macro.
+ * 
  * VERSION 1.2.1 <DATE: 2013.04.13>
- *    1.20 optimize detail fixed.
- *
- * VERSION 2.0.0 <DATE: 2013.04.23>
- *    optimize interface.
- *    change config file format.
- *    file name suffix add process id.
- *
+ * 	1.20 optimize detail fixed.
+ * 
+ * VERSION 2.0.0 <DATE: 2013.04.25>
+ * 	new interface.
+ * 	new config design.
+ * 	file name append process id.
+ * 
  */
 
 #pragma once
@@ -112,26 +112,28 @@
 #include <errno.h>
 #include <stdio.h>
 
+//! logger ID type.
 typedef int LoggerId;
 
 //! the max logger count.
-const static int LOG4Z_LOGGER_MAX = 20;
+#define LOG4Z_LOGGER_MAX 10
 
 //! the max log content length.
-const static int LOG4Z_LOG_BUF_SIZE = 2048;
+#define LOG4Z_LOG_BUF_SIZE 2048
 
 //! the invalid logger id. 
-const static LoggerId LOG4Z_INVALID_LOGGER_ID = -1;
+#define LOG4Z_INVALID_LOGGER_ID -1
 
 //! the main logger id.
-const static LoggerId LOG4Z_MAIN_LOGGER_ID = 0;
+#define LOG4Z_MAIN_LOGGER_ID 0
 
 //! the main logger name.
-const static char * LOG4Z_MAIN_LOGGER_NAME = "Main";
+#define LOG4Z_MAIN_LOGGER_NAME "Main"
 
+//! LOG Level
 enum ENUM_LOG_LEVEL
 {
-	LOG_LEVEL_DEBUG,
+	LOG_LEVEL_DEBUG = 0,
 	LOG_LEVEL_INFO,
 	LOG_LEVEL_WARN,
 	LOG_LEVEL_ERROR,
@@ -155,7 +157,7 @@ _ZSUMMER_LOG4Z_BEGIN
 
 
 
-//log4z class
+//! log4z class
 class ILog4zManager
 {
 public:
@@ -168,14 +170,15 @@ public:
 
 	//! config
 	virtual bool Config(std::string cfgPath) = 0;
-	//! create|writeover 
+	//! create | write over 
 	virtual LoggerId CreateLogger(std::string name, std::string path="./log/",int nLevel = LOG_LEVEL_DEBUG,bool display = true) = 0;
-	//! find logger
-	virtual LoggerId FindLogger(std::string name) =0;
 
 	//! start & stop.
 	virtual bool Start() = 0;
 	virtual bool Stop() = 0;
+
+	//! find logger. thread safe.
+	virtual LoggerId FindLogger(std::string name) =0;
 
 	//! push log, thread safe.
 	virtual bool PushLog(LoggerId id, int level, const char * log) = 0;
@@ -236,6 +239,13 @@ extern __thread char g_log4zstreambuf[LOG4Z_LOG_BUF_SIZE];
 #define LOGA( log ) LOG_ALARM(0, log )
 #define LOGF( log ) LOG_FATAL(0, log )
 
+
+
+
+
+
+
+
 _ZSUMMER_BEGIN
 _ZSUMMER_LOG4Z_BEGIN
 
@@ -263,7 +273,6 @@ public:
 			int count = (int)(m_pEnd - m_pCur);
 #ifdef WIN32
 			len = _snprintf(m_pCur, count, ft, t);
-			int err = errno;
 			if (len == count || (len == -1 && errno == ERANGE))
 			{
 				len = count;
