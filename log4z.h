@@ -37,10 +37,10 @@
 
 /*
  * AUTHORS:  YaweiZhang <yawei_zhang@foxmail.com>
- * VERSION:  2.0.0
+ * VERSION:  2.1
  * PURPOSE:  A lightweight library for error reporting and logging to file and screen .
  * CREATION: 2010.10.4
- * LCHANGE:  2013.04.25
+ * LCHANGE:  2013.05.22
  * LICENSE:  Expat/MIT License, See Copyright Notice at the begin of this file.
  */
 
@@ -100,6 +100,10 @@
  * 	new interface.
  * 	new config design.
  * 	file name append process id.
+ *
+ * VERSION 2.1 <DATE: 2013.05.22>
+ * 	support binary text output
+ * 	fix vs2005 can't open Chinese characters path file.
  * 
  */
 
@@ -121,14 +125,14 @@ typedef int LoggerId;
 //! the max log content length.
 #define LOG4Z_LOG_BUF_SIZE 2048
 
-//! the invalid logger id. 
+
+//! the invalid logger id. DO NOT TOUCH
 #define LOG4Z_INVALID_LOGGER_ID -1
 
-//! the main logger id.
+//! the main logger id. DO NOT TOUCH
 #define LOG4Z_MAIN_LOGGER_ID 0
 
-//! the main logger name.
-#define LOG4Z_MAIN_LOGGER_NAME "Main"
+
 
 //! LOG Level
 enum ENUM_LOG_LEVEL
@@ -232,12 +236,12 @@ extern __thread char g_log4zstreambuf[LOG4Z_LOG_BUF_SIZE];
 #define LOG_FATAL(id, log) LOG_STREAM(id, LOG_LEVEL_FATAL, log)
 
 //! super micro.
-#define LOGD( log ) LOG_DEBUG(0, log )
-#define LOGI( log ) LOG_INFO(0, log )
-#define LOGW( log ) LOG_WARN(0, log )
-#define LOGE( log ) LOG_ERROR(0, log )
-#define LOGA( log ) LOG_ALARM(0, log )
-#define LOGF( log ) LOG_FATAL(0, log )
+#define LOGD( log ) LOG_DEBUG(LOG4Z_MAIN_LOGGER_ID, log )
+#define LOGI( log ) LOG_INFO(LOG4Z_MAIN_LOGGER_ID, log )
+#define LOGW( log ) LOG_WARN(LOG4Z_MAIN_LOGGER_ID, log )
+#define LOGE( log ) LOG_ERROR(LOG4Z_MAIN_LOGGER_ID, log )
+#define LOGA( log ) LOG_ALARM(LOG4Z_MAIN_LOGGER_ID, log )
+#define LOGF( log ) LOG_FATAL(LOG4Z_MAIN_LOGGER_ID, log )
 
 
 
@@ -254,6 +258,16 @@ _ZSUMMER_LOG4Z_BEGIN
 #pragma warning(push)
 #pragma warning(disable:4996)
 #endif
+struct BinaryBlock
+{
+	BinaryBlock(const char * buf, int len)
+	{
+		_buf = buf;
+		_len = len;
+	}
+	const char * _buf;
+	int  _len;
+};
 class CStringStream
 {
 public:
@@ -432,6 +446,17 @@ public:
 	CStringStream & operator <<(const std::string t)
 	{
 		WriteData("%s", t.c_str());
+		return *this;
+	}
+
+	CStringStream & operator << (const BinaryBlock binary)
+	{
+		WriteData("%s", "[");
+		for (int i=0; i<binary._len; i++)
+		{
+			WriteData("%02x ", (unsigned char)binary._buf[i]);
+		}
+		WriteData("%s", "]");
 		return *this;
 	}
 
